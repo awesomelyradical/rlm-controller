@@ -1,0 +1,59 @@
+# .gitignore for RLM Controller
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# RLM Runtime artifacts
+ctx/*.txt
+ctx/*.json
+logs/*.jsonl
+logs/**/*.jsonl
+logs/**/*.json
+logs/**/subcalls/
+scratch/
+tmp/
+*.tmp
+
+# Keep directory structure
+!ctx/.gitkeep
+!logs/.gitkeep
+
+# Sensitive data
+*.key
+*.pem
+*.secret
+credentials.json
+.env
