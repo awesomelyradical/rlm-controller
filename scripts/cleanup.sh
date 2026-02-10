@@ -3,16 +3,16 @@ set -euo pipefail
 
 # Cleanup temporary RLM artifacts
 # Defaults:
-#   CLEAN_ROOT=/home/aric/.openclaw/workspace
+#   CLEAN_ROOT=. (current directory or workspace root)
 #   CLEAN_RETENTION=0 (delete all)
-#   CLEAN_IGNORE_FILE=<skill>/docs/cleanup_ignore.txt
+#   CLEAN_IGNORE_FILE=./docs/cleanup_ignore.txt
 
-ROOT_DIR="${CLEAN_ROOT:-/home/aric/.openclaw/workspace}"
+ROOT_DIR="${CLEAN_ROOT:-.}"
 RLM_SCRATCH="$ROOT_DIR/scratch/rlm_prototype"
 CTX_DIR="$RLM_SCRATCH/ctx"
 LOG_DIR="$RLM_SCRATCH/logs"
 RETENTION="${CLEAN_RETENTION:-0}"
-IGNORE_FILE="${CLEAN_IGNORE_FILE:-/home/aric/.openclaw/workspace/skills/rlm-controller/docs/cleanup_ignore.txt}"
+IGNORE_FILE="${CLEAN_IGNORE_FILE:-./docs/cleanup_ignore.txt}"
 
 read_ignore() {
   if [[ -f "$IGNORE_FILE" ]]; then

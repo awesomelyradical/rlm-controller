@@ -48,7 +48,7 @@ Provides a safe, policy-driven scaffold to process very long inputs by:
 - See `docs/security_checklist.md` for pre/during/post run checks
 
 ## OpenClaw sub-agent constraints
-Per local docs (`/home/aric/.npm-global/lib/node_modules/openclaw/docs/tools/subagents.md`):
+Per OpenClaw documentation (subagents.md):
 - Sub-agents cannot spawn sub-agents
 - Sub-agents do not have session tools (sessions_*) by default
 - `sessions_spawn` is non-blocking and returns immediately
@@ -60,6 +60,3 @@ Use `scripts/cleanup.sh` after runs to purge temp artifacts.
 
 ## Configuration
 See `docs/policy.md` for thresholds and default limits.
-
-## Notes
-This skill is a skeleton. Wire into the OpenClaw gateway trigger later for Option C (hybrid).
