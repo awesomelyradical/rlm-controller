@@ -5,7 +5,7 @@ This does not invoke LLMs; it prepares artifacts for OpenClaw root session.
 Usage:
   rlm_auto.py --ctx <path> --goal "..." --outdir <dir>
 """
-import argparse, json, os, subprocess, tempfile
+import argparse, json, os, subprocess
 
 def run_plan(ctx, goal):
     cmd = ["python3", os.path.join(os.path.dirname(__file__), "rlm_plan.py"),
@@ -22,7 +22,7 @@ def main():
     p.add_argument('--ctx', required=True)
     p.add_argument('--goal', required=True)
     p.add_argument('--outdir', required=True)
-    p.add_argument('--max-subcalls', type=int, default=16)
+    p.add_argument('--max-subcalls', type=int, default=32)
     p.add_argument('--slice-max', type=int, default=16000)
     args = p.parse_args()
 
