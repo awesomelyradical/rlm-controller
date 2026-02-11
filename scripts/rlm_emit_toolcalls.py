@@ -53,12 +53,8 @@ def main():
         for it in batches[batch_id]:
             user_prompt = read_text(it['prompt_file'])
             full_prompt = f"SYSTEM:\n{sys_prompt}\n\nUSER:\n{user_prompt}\n"
-            tool_name = "sessions_spawn"
-            if tool_name not in ALLOWED_TOOLS:
-                print(f"ERROR: tool '{tool_name}' not in safelist", file=sys.stderr)
-                sys.exit(1)
             batch_calls.append({
-                "tool": tool_name,
+                "tool": "sessions_spawn",
                 "params": {
                     "task": full_prompt,
                     "label": f"rlm_subcall_b{batch_id}"

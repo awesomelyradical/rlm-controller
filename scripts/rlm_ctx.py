@@ -13,19 +13,20 @@ MAX_SEARCH_RESULTS = 200
 MAX_CHUNKS = 5000
 MAX_PEEK_LENGTH = 16000
 
-def _read_text(path):
+def _validate_path(path):
+    """Reject paths containing '..' segments to prevent directory traversal."""
     if '..' in path.split(os.sep):
         print(f"ERROR: path traversal detected: {path}", file=sys.stderr)
         sys.exit(1)
-    rp = os.path.realpath(path)
+    return os.path.realpath(path)
+
+def _read_text(path):
+    rp = _validate_path(path)
     with open(rp, 'r', encoding='utf-8', errors='replace') as f:
         return f.read()
 
 def _write_text(path, text):
-    if '..' in path.split(os.sep):
-        print(f"ERROR: path traversal detected: {path}", file=sys.stderr)
-        sys.exit(1)
-    rp = os.path.realpath(path)
+    rp = _validate_path(path)
     with open(rp, 'w', encoding='utf-8') as f:
         f.write(text)
 

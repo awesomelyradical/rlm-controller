@@ -22,7 +22,7 @@ All scripts that produce toolcall output enforce safelists at the code level:
 |--------|------------|
 | `rlm_emit_toolcalls.py` | `ALLOWED_TOOLS = {"sessions_spawn"}` — rejects any toolcall with a tool name not in safelist; `ALLOWED_ACTIONS` validates spawn manifest entries; `MAX_SUBCALLS` enforced |
 | `rlm_async_spawn.py` | `ALLOWED_ACTION = "sessions_spawn"` — only this action is written to manifests; `MAX_SUBCALLS` and `MAX_BATCHES` enforce hard limits |
-| `rlm_ctx.py` | Path traversal protection via `os.path.realpath` checks; `MAX_PEEK_LENGTH` caps peek output; `MAX_SEARCH_RESULTS` and `MAX_CHUNKS` cap result counts |
+| `rlm_ctx.py` | Path traversal protection rejects `..` segments and resolves paths via `os.path.realpath`; `MAX_PEEK_LENGTH` caps peek output; `MAX_SEARCH_RESULTS` and `MAX_CHUNKS` cap result counts |
 | `rlm_auto.py` | `--max-subcalls` (default 32) and `--slice-max` (default 16000) enforce plan-time limits |
 
 ### What "safelisted helpers" means
