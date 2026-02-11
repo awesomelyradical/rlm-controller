@@ -6,7 +6,12 @@ that will call sessions_spawn in parallel batches.
 Usage:
   rlm_async_spawn.py --async-plan <async_plan.json> --out <spawn.jsonl>
 """
-import argparse, json
+import argparse, json, sys
+
+# --- Safelist enforcement ---
+ALLOWED_ACTION = "sessions_spawn"
+MAX_SUBCALLS = 32
+MAX_BATCHES = 8
 
 def main():
     p = argparse.ArgumentParser()
@@ -19,16 +24,24 @@ def main():
 
     with open(args.out, 'w', encoding='utf-8') as f:
         batch_id = 0
+        total_entries = 0
         for batch in ap.get('batches', []):
             batch_id += 1
+            if batch_id > MAX_BATCHES:
+                print(f"ERROR: batch count {batch_id} exceeds limit of {MAX_BATCHES}", file=sys.stderr)
+                sys.exit(1)
             for item in batch:
+                total_entries += 1
+                if total_entries > MAX_SUBCALLS:
+                    print(f"ERROR: subcall count exceeds limit of {MAX_SUBCALLS}", file=sys.stderr)
+                    sys.exit(1)
                 entry = {
                     "batch": batch_id,
                     "prompt_file": item.get('file'),
                     "slice_start": item.get('start'),
                     "slice_end": item.get('end'),
                     "kw": item.get('kw',''),
-                    "action": "sessions_spawn"
+                    "action": ALLOWED_ACTION
                 }
                 f.write(json.dumps(entry) + "\n")
 

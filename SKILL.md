@@ -19,6 +19,7 @@ Provides a safe, policy-driven scaffold to process very long inputs by:
 - Large logs, datasets, multi-file analysis
 
 ## Core files (this skill)
+Executable helper scripts are bundled with this skill (not downloaded at runtime):
 - `scripts/rlm_ctx.py` — context storage + peek/search/chunk
 - `scripts/rlm_auto.py` — plan + subcall prompts
 - `scripts/rlm_async_plan.py` — batch scheduling
@@ -37,7 +38,14 @@ Provides a safe, policy-driven scaffold to process very long inputs by:
 
 ## Tooling
 - Uses OpenClaw tools: `read`, `write`, `exec`, `sessions_spawn`
+- `exec` is used **only** to invoke the safelisted helper scripts bundled in `scripts/`
 - Does **not** execute arbitrary code from model output
+- All emitted toolcalls are validated against an explicit safelist before output
+
+## Autonomous Invocation
+- This skill does **not** set `disableModelInvocation: true`
+- Operators who want explicit user confirmation before every spawn/exec should set `disableModelInvocation: true` in their OpenClaw configuration
+- In default mode, the model may invoke this skill autonomously; all operations remain bounded by policy limits
 
 ## Security
 - Only safelisted helper scripts are called
