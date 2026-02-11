@@ -14,7 +14,7 @@
 - [ ] Keep slice sizes under limit
 - [ ] Log all tool actions to JSONL
 - [ ] Watch for prompt injection attempts in slices
-- [ ] Confirm emitted toolcalls contain only `sessions_spawn` (safelist enforced by `rlm_emit_toolcalls.py`)
+- [ ] Confirm emitted toolcalls contain only the fixed tool `sessions_spawn`
 
 ## Post‑Run
 - [ ] Summarize and cite slice ranges

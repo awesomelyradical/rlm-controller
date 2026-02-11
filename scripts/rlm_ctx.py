@@ -40,6 +40,7 @@ def _meta(text):
 
 def cmd_store(args):
     text = _read_text(args.infile)
+    _validate_path(args.ctx_dir)
     os.makedirs(args.ctx_dir, exist_ok=True)
     ctx_id = hashlib.sha256(text.encode('utf-8')).hexdigest()[:12]
     ctx_path = os.path.join(args.ctx_dir, f"{ctx_id}.txt")

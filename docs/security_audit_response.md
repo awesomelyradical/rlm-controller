@@ -33,11 +33,13 @@ The concern is valid: prior to this update, enforcement of the safelist was a do
 
 | Mitigation | File | Effect |
 |-----------|------|--------|
-| Explicit `ALLOWED_TOOLS` safelist with runtime validation | `rlm_emit_toolcalls.py` | Any toolcall with a tool name not in `{"sessions_spawn"}` is rejected with a hard error |
+| Hard-coded tool name for emissions | `rlm_emit_toolcalls.py` | Tool emissions are restricted to the single hard-coded constant `EMITTED_TOOL = "sessions_spawn"`; no dynamic tool name from model output is used |
 | Explicit `ALLOWED_ACTIONS` check on spawn manifest entries | `rlm_emit_toolcalls.py` | Manifest entries with unexpected action types are rejected |
+| Required field and type validation | `rlm_emit_toolcalls.py` | Manifest entries missing `batch` (int) or `prompt_file` (non-empty string) are rejected |
+| Path traversal checks on `prompt_file` | `rlm_emit_toolcalls.py` | Manifest entries with `..` path segments in `prompt_file` are rejected |
 | `ALLOWED_ACTION` constant and limit enforcement | `rlm_async_spawn.py` | Only `sessions_spawn` action is written; `MAX_SUBCALLS` and `MAX_BATCHES` enforced |
 | `MAX_SUBCALLS` enforcement at emission time | `rlm_emit_toolcalls.py` | Spawn manifests exceeding 32 entries are rejected |
-| Path traversal protection | `rlm_ctx.py` | `os.path.realpath` checks prevent directory traversal |
+| Path normalization and traversal checks | `rlm_ctx.py` | `os.path.realpath` normalizes paths; explicit `..` segment checks prevent directory traversal; `--ctx-dir` validated before directory creation |
 | Named constants for all limits | `rlm_ctx.py` | `MAX_PEEK_LENGTH`, `MAX_SEARCH_RESULTS`, `MAX_CHUNKS` replace magic numbers |
 | Explicit safelisted scripts list | `docs/policy.md` | Documents exactly which scripts may be invoked via `exec` |
 | Enforcement mechanism documentation | `docs/security.md` | New "Enforcement Mechanisms" section details per-script validation |

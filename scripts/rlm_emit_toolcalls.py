@@ -5,25 +5,40 @@ This prints a JSON array of tool calls grouped by batch.
 Usage:
   rlm_emit_toolcalls.py --spawn <spawn.jsonl> --subcall-system <path>
 """
-import argparse, json, sys
+import argparse, json, os, sys
 
 # --- Safelist enforcement ---
-# Only these tools may appear in emitted toolcalls.
-ALLOWED_TOOLS = frozenset({"sessions_spawn"})
 # Only these action types are accepted in spawn manifests.
 ALLOWED_ACTIONS = frozenset({"sessions_spawn"})
+# The fixed tool name emitted in all toolcalls.
+EMITTED_TOOL = "sessions_spawn"
 MAX_SUBCALLS = 32
+
+def _validate_path(path):
+    """Reject paths containing '..' segments to prevent directory traversal."""
+    if '..' in path.split(os.sep):
+        print(f"ERROR: path traversal detected: {path}", file=sys.stderr)
+        sys.exit(1)
+    return os.path.realpath(path)
 
 def read_spawn(path):
     items = []
     with open(path, 'r', encoding='utf-8') as f:
-        for line in f:
+        for lineno, line in enumerate(f, 1):
             if line.strip():
                 entry = json.loads(line)
                 action = entry.get("action", "")
                 if action not in ALLOWED_ACTIONS:
-                    print(f"ERROR: disallowed action '{action}' in spawn manifest", file=sys.stderr)
+                    print(f"ERROR: disallowed action '{action}' in spawn manifest line {lineno}", file=sys.stderr)
                     sys.exit(1)
+                if not isinstance(entry.get("batch"), int):
+                    print(f"ERROR: missing or non-integer 'batch' in spawn manifest line {lineno}", file=sys.stderr)
+                    sys.exit(1)
+                pf = entry.get("prompt_file")
+                if not isinstance(pf, str) or not pf:
+                    print(f"ERROR: missing or empty 'prompt_file' in spawn manifest line {lineno}", file=sys.stderr)
+                    sys.exit(1)
+                _validate_path(pf)
                 items.append(entry)
     if len(items) > MAX_SUBCALLS:
         print(f"ERROR: spawn manifest contains {len(items)} entries, exceeding limit of {MAX_SUBCALLS}", file=sys.stderr)
@@ -54,7 +69,7 @@ def main():
             user_prompt = read_text(it['prompt_file'])
             full_prompt = f"SYSTEM:\n{sys_prompt}\n\nUSER:\n{user_prompt}\n"
             batch_calls.append({
-                "tool": "sessions_spawn",
+                "tool": EMITTED_TOOL,
                 "params": {
                     "task": full_prompt,
                     "label": f"rlm_subcall_b{batch_id}"
