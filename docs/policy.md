@@ -18,10 +18,25 @@
 - If input < 50k but user explicitly requests RLM, allow but warn about overhead.
 
 ## Allowed Operations
-- `peek(ctx, offset, length)`
-- `search(ctx, regex)`
-- `chunk(ctx, size, overlap)`
+- `peek(ctx, offset, length)` — capped at 16k chars per peek
+- `search(ctx, regex)` — capped at 200 results
+- `chunk(ctx, size, overlap)` — capped at 5000 chunks
 - `sessions_spawn` subcalls (no further spawning)
+
+## Safelisted Scripts
+Only these scripts may be invoked via `exec`. All are bundled in `scripts/`:
+- `rlm_ctx.py` — context store/peek/search/chunk
+- `rlm_plan.py` — keyword-based slice planning
+- `rlm_auto.py` — auto artifact generation
+- `rlm_async_plan.py` — batch scheduling
+- `rlm_async_spawn.py` — spawn manifest builder
+- `rlm_emit_toolcalls.py` — toolcall JSON formatter
+- `rlm_batch_runner.py` — assistant-driven executor
+- `rlm_runner.py` — JSONL orchestrator
+- `rlm_trace_summary.py` — log summarizer
+- `cleanup.sh` — artifact cleanup
+
+No other scripts or commands should be invoked via `exec`.
 
 ## Disallowed Operations
 - Executing arbitrary model-generated code

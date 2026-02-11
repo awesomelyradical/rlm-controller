@@ -9,12 +9,25 @@ Usage:
 """
 import argparse, hashlib, json, os, re, sys, time
 
+MAX_SEARCH_RESULTS = 200
+MAX_CHUNKS = 5000
+MAX_PEEK_LENGTH = 16000
+
+def _validate_path(path):
+    """Reject paths containing '..' segments to prevent directory traversal."""
+    if '..' in path.split(os.sep):
+        print(f"ERROR: path traversal detected: {path}", file=sys.stderr)
+        sys.exit(1)
+    return os.path.realpath(path)
+
 def _read_text(path):
-    with open(path, 'r', encoding='utf-8', errors='replace') as f:
+    rp = _validate_path(path)
+    with open(rp, 'r', encoding='utf-8', errors='replace') as f:
         return f.read()
 
 def _write_text(path, text):
-    with open(path, 'w', encoding='utf-8') as f:
+    rp = _validate_path(path)
+    with open(rp, 'w', encoding='utf-8') as f:
         f.write(text)
 
 def _meta(text):
@@ -27,6 +40,7 @@ def _meta(text):
 
 def cmd_store(args):
     text = _read_text(args.infile)
+    _validate_path(args.ctx_dir)
     os.makedirs(args.ctx_dir, exist_ok=True)
     ctx_id = hashlib.sha256(text.encode('utf-8')).hexdigest()[:12]
     ctx_path = os.path.join(args.ctx_dir, f"{ctx_id}.txt")
@@ -48,7 +62,7 @@ def cmd_peek(args):
     text = _read_text(args.ctx)
     n = len(text)
     offset = max(0, min(args.offset, n))
-    length = max(0, min(args.length, n - offset))
+    length = max(0, min(args.length, MAX_PEEK_LENGTH, n - offset))
     out = text[offset:offset+length]
     print(out)
 
@@ -58,7 +72,7 @@ def cmd_search(args):
     matches = []
     for m in pattern.finditer(text):
         matches.append({"start": m.start(), "end": m.end(), "match": m.group(0)})
-        if len(matches) >= 200:
+        if len(matches) >= MAX_SEARCH_RESULTS:
             break
     print(json.dumps(matches, indent=2))
 
@@ -72,7 +86,7 @@ def cmd_chunk(args):
         j = min(len(text), i + size)
         chunks.append({"start": i, "end": j})
         i = j - overlap
-        if len(chunks) >= 5000:
+        if len(chunks) >= MAX_CHUNKS:
             break
     print(json.dumps(chunks))
 
