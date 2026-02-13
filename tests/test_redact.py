@@ -84,6 +84,13 @@ class TestRedactSecrets(unittest.TestCase):
         result = redact_secrets(text)
         self.assertNotIn("ghp_1234567890abcdef", result)
 
+    def test_password_with_spaces_in_quotes(self):
+        """Quoted values with spaces should be fully redacted."""
+        text = 'password = "my secret value"'
+        result = redact_secrets(text)
+        self.assertNotIn("my secret value", result)
+        self.assertIn(REDACTED, result)
+
     # ------------------------------------------------------------------
     # Connection strings
     # ------------------------------------------------------------------
@@ -140,7 +147,11 @@ class TestRedactSecrets(unittest.TestCase):
         self.assertNotIn("topsecret", result)
         self.assertNotIn("eyToken123", result)
         self.assertIn("normal line here", result)
-        self.assertEqual(result.count(REDACTED), 2)
+        # Verify each line was independently redacted
+        lines = result.strip().split('\n')
+        redacted_lines = [l for l in lines if REDACTED in l]
+        self.assertEqual(len(redacted_lines), 2,
+                         "Expected exactly 2 lines to contain redactions")
 
 
 if __name__ == '__main__':

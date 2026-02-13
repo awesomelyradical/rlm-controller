@@ -24,7 +24,7 @@ class TestAutoScratchPaths(unittest.TestCase):
             "The widget API is versioned.\n"
             "password = 'do-not-leak-this'\n"
             "More content about widgets and versioning.\n"
-        ) * 20  # repeat to ensure some keyword hits
+        ) * 20  # repeat to exceed keyword-hit threshold and produce multiple slices
         with open(self.ctx_file, 'w') as f:
             f.write(sample_text)
         self.outdir = os.path.join(self.tmpdir, 'run_output')

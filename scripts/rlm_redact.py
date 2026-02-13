@@ -42,9 +42,10 @@ _PATTERNS = [
 
     # Generic "password", "secret", "token", "api_key" assignments
     # Matches: password = "...", SECRET: '...', api_key=...
+    # Quoted values may contain spaces; unquoted values stop at whitespace.
     (re.compile(
         r"""(?i)((?:password|passwd|secret|token|api_key|apikey|api[-_]?secret|access_key|private_key)"""
-        r"""\s*[:=]\s*)(["']?)(\S+)\2""",
+        r"""\s*[:=]\s*)(?:"[^"]*"|'[^']*'|\S+)""",
     ), r"\1" + REDACTED),
 
     # Connection strings with passwords  (pwd=...; or password=...;)

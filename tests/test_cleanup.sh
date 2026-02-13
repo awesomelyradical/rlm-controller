@@ -82,10 +82,10 @@ assert_file_missing "$LOG_DIR/run_001.jsonl"
 # Test 3: RETENTION=2 keeps last 2 files by mtime
 # ---------------------------------------------------------------
 echo "--- Test 3: RETENTION=2, keeps newest 2 files ---"
-# Re-create with different mtimes
-echo "old"    > "$LOG_DIR/run_A.jsonl"; sleep 0.1
-echo "mid"    > "$LOG_DIR/run_B.jsonl"; sleep 0.1
-echo "newest" > "$LOG_DIR/run_C.jsonl"
+# Re-create with different mtimes using explicit timestamps
+echo "old"    > "$LOG_DIR/run_A.jsonl"; touch -t 202501010000 "$LOG_DIR/run_A.jsonl"
+echo "mid"    > "$LOG_DIR/run_B.jsonl"; touch -t 202501020000 "$LOG_DIR/run_B.jsonl"
+echo "newest" > "$LOG_DIR/run_C.jsonl"; touch -t 202501030000 "$LOG_DIR/run_C.jsonl"
 
 CLEAN_ROOT="$WORK_DIR" CLEAN_RETENTION=2 CLEAN_IGNORE_FILE=/dev/null \
   bash "$CLEANUP" > /dev/null
