@@ -108,6 +108,13 @@ class TestRedactSecrets(unittest.TestCase):
         result = redact_secrets(text)
         self.assertNotIn("0123456789abcdef0123456789abcdef", result)
 
+    def test_hex_secret_uppercase(self):
+        """Uppercase hex strings should also be redacted."""
+        text = "key: 0123456789ABCDEF0123456789ABCDEF end"
+        result = redact_secrets(text)
+        self.assertNotIn("0123456789ABCDEF0123456789ABCDEF", result)
+        self.assertIn(REDACTED, result)
+
     # ------------------------------------------------------------------
     # Non-sensitive text preserved
     # ------------------------------------------------------------------

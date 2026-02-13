@@ -113,6 +113,24 @@ class TestAutoScratchPaths(unittest.TestCase):
                 found = True
         self.assertTrue(found, "Expected secret to remain when --no-redact is used")
 
+    def test_goal_secrets_redacted_by_default(self):
+        """Secrets embedded in the goal text should also be redacted in subcall prompts."""
+        cmd = [
+            sys.executable,
+            os.path.join(SCRIPTS_DIR, 'rlm_auto.py'),
+            '--ctx', self.ctx_file,
+            '--goal', 'find files with password=hunter2 in config',
+            '--outdir', self.outdir,
+        ]
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, f"rlm_auto.py failed: {result.stderr}")
+        subcalls_dir = os.path.join(self.outdir, 'subcalls')
+        for fname in os.listdir(subcalls_dir):
+            with open(os.path.join(subcalls_dir, fname), 'r') as f:
+                content = f.read()
+            self.assertNotIn('hunter2', content,
+                             f"Goal secret leaked in {fname}")
+
 
 if __name__ == '__main__':
     unittest.main()

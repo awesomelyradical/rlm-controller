@@ -8,7 +8,6 @@ Patterns covered:
 - Generic password / secret assignments
 - Connection strings with embedded credentials
 - .env-style KEY=VALUE secrets
-- Base64-encoded blobs that look like secrets
 
 Usage as module:
     from rlm_redact import redact_secrets
@@ -48,14 +47,15 @@ _PATTERNS = [
         r"""\s*[:=]\s*)(?:"[^"]*"|'[^']*'|\S+)""",
     ), r"\1" + REDACTED),
 
-    # Connection strings with passwords  (pwd=...; or password=...;)
+    # Connection strings with short-form pwd (pwd=...; )
+    # Note: password=... is already handled by the generic pattern above.
     (re.compile(
-        r"(?i)((?:pwd|password)\s*=\s*)([^;\s]+)",
+        r"(?i)(pwd\s*=\s*)[^;\s]+",
     ), r"\1" + REDACTED),
 
     # Hex-encoded secrets (>=32 hex chars that look like hashes/keys)
     (re.compile(
-        r"(?<![A-Za-z0-9])[0-9a-f]{32,64}(?![A-Za-z0-9])",
+        r"(?<![A-Za-z0-9])[0-9a-fA-F]{32,64}(?![A-Za-z0-9])",
     ), REDACTED),
 ]
 

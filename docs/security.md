@@ -41,7 +41,7 @@ These scripts:
 - The toolcall emission pipeline (`rlm_auto → rlm_async_plan → rlm_async_spawn → rlm_emit_toolcalls`) is deterministic and driven entirely by the initial plan, not by model output
 
 ### Sensitive‑Input Redaction
-- `rlm_auto.py` applies automatic secret redaction (via `rlm_redact.py`) to slice text **before** writing subcall prompts, preventing accidental leakage of secrets to sub‑agents
+- `rlm_auto.py` applies automatic secret redaction (via `rlm_redact.py`) to both slice text and goal text **before** writing subcall prompts, preventing accidental leakage of secrets to sub‑agents
 - Covered patterns: PEM blocks, Bearer/Basic tokens, AWS credentials, password/secret/token/api_key assignments, connection‑string passwords, long hex‑encoded secrets
 - Redaction is **enabled by default**; pass `--no-redact` to `rlm_auto.py` to disable when processing inputs known to be non‑sensitive
 - The original context file is never modified — redaction applies only to the subcall prompt copies

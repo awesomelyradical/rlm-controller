@@ -58,14 +58,16 @@ def main():
     prompt_files = []
     for i, sl in enumerate(trimmed, 1):
         slice_text = text[sl["start"]:sl["end"]]
+        goal_text = args.goal
         if args.redact:
             slice_text = redact_secrets(slice_text)
+            goal_text = redact_secrets(goal_text)
         prompt_path = os.path.join(prompts_dir, f"subcall_{i:02d}.txt")
         with open(prompt_path, "w", encoding="utf-8") as f:
             f.write("Slice:\n")
             f.write(slice_text)
             f.write("\n\nGoal:\n")
-            f.write(args.goal)
+            f.write(goal_text)
         prompt_files.append({"file": prompt_path, **sl})
 
     out = {
