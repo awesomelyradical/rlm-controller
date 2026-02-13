@@ -1,0 +1,48 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build release zip
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          ARCHIVE="rlm-controller-${VERSION}.zip"
+
+          # Create a staging directory with only allowed files
+          STAGING=$(mktemp -d)
+          DEST="${STAGING}/rlm-controller-${VERSION}"
+          mkdir -p "${DEST}"
+
+          # Copy all tracked files, excluding disallowed ones
+          git ls-files -z | while IFS= read -r -d '' file; do
+            basename="$(basename "$file")"
+            # Skip .gitkeep, .gitignore, and .git-related dot files
+            case "$basename" in
+              .gitkeep|.gitignore) continue ;;
+            esac
+            mkdir -p "${DEST}/$(dirname "$file")"
+            cp "$file" "${DEST}/$file"
+          done
+
+          # Build the zip from the staging directory
+          (cd "${STAGING}" && zip -r "${OLDPWD}/${ARCHIVE}" "rlm-controller-${VERSION}")
+
+          echo "ARCHIVE=${ARCHIVE}" >> "$GITHUB_ENV"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.ARCHIVE }}
+          generate_release_notes: true
