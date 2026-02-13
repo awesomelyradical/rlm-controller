@@ -6,6 +6,7 @@ Usage:
   rlm_auto.py --ctx <path> --goal "..." --outdir <dir>
 """
 import argparse, json, os, subprocess
+from rlm_redact import redact_secrets
 
 def run_plan(ctx, goal):
     cmd = ["python3", os.path.join(os.path.dirname(__file__), "rlm_plan.py"),
@@ -24,6 +25,10 @@ def main():
     p.add_argument('--outdir', required=True)
     p.add_argument('--max-subcalls', type=int, default=32)
     p.add_argument('--slice-max', type=int, default=16000)
+    p.add_argument('--redact', dest='redact', action='store_true', default=True,
+                   help='Redact secrets from slice text in subcall prompts (default: enabled)')
+    p.add_argument('--no-redact', dest='redact', action='store_false',
+                   help='Disable secret redaction in subcall prompts')
     args = p.parse_args()
 
     os.makedirs(args.outdir, exist_ok=True)
@@ -53,6 +58,8 @@ def main():
     prompt_files = []
     for i, sl in enumerate(trimmed, 1):
         slice_text = text[sl["start"]:sl["end"]]
+        if args.redact:
+            slice_text = redact_secrets(slice_text)
         prompt_path = os.path.join(prompts_dir, f"subcall_{i:02d}.txt")
         with open(prompt_path, "w", encoding="utf-8") as f:
             f.write("Slice:\n")
