@@ -28,9 +28,14 @@ jobs:
           # Copy all tracked files, excluding disallowed ones
           git ls-files -z | while IFS= read -r -d '' file; do
             basename="$(basename "$file")"
-            # Skip .gitkeep, .gitignore, and .git-related dot files
+            # Skip .gitkeep and .gitignore files
             case "$basename" in
               .gitkeep|.gitignore) continue ;;
+            esac
+            # Skip .github/ directory except FUNDING.yml
+            case "$file" in
+              .github/FUNDING.yml) ;;
+              .github/*) continue ;;
             esac
             mkdir -p "${DEST}/$(dirname "$file")"
             cp "$file" "${DEST}/$file"
