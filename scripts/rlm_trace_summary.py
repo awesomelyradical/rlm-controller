@@ -2,16 +2,19 @@
 """Summarize an RLM JSONL log into markdown for quick inspection.
 Usage: rlm_trace_summary.py --log <path>
 """
-import argparse, json
+import argparse, json, os, sys
+from rlm_path import validate_path as _validate_path
 
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--log', required=True)
     args = p.parse_args()
 
+    rp = _validate_path(args.log)
+
     actions = []
     final = None
-    with open(args.log, 'r', encoding='utf-8') as f:
+    with open(rp, 'r', encoding='utf-8') as f:
         for line in f:
             if not line.strip():
                 continue

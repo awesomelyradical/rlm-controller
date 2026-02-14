@@ -5,7 +5,8 @@ This does not invoke LLMs; it prepares artifacts for OpenClaw root session.
 Usage:
   rlm_auto.py --ctx <path> --goal "..." --outdir <dir>
 """
-import argparse, json, os, subprocess
+import argparse, json, os, subprocess, sys
+from rlm_path import validate_path as _validate_path
 from rlm_redact import redact_secrets
 
 def run_plan(ctx, goal):
@@ -15,7 +16,8 @@ def run_plan(ctx, goal):
     return json.loads(out)
 
 def read_text(path):
-    with open(path, 'r', encoding='utf-8', errors='replace') as f:
+    rp = _validate_path(path)
+    with open(rp, 'r', encoding='utf-8', errors='replace') as f:
         return f.read()
 
 def main():
@@ -31,6 +33,7 @@ def main():
                    help='Disable secret redaction in subcall prompts')
     args = p.parse_args()
 
+    _validate_path(args.outdir)
     os.makedirs(args.outdir, exist_ok=True)
     plan = run_plan(args.ctx, args.goal)
     slices = plan.get("slices", [])

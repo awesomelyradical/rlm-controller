@@ -7,18 +7,13 @@ Usage:
   rlm_ctx.py search --ctx <file> --pattern <regex>
   rlm_ctx.py chunk --ctx <file> --size <int> --overlap <int>
 """
-import argparse, hashlib, json, os, re, sys, time
+import argparse, hashlib, json, os, re, signal, sys, time
+from rlm_path import validate_path as _validate_path
 
 MAX_SEARCH_RESULTS = 200
 MAX_CHUNKS = 5000
 MAX_PEEK_LENGTH = 16000
-
-def _validate_path(path):
-    """Reject paths containing '..' segments to prevent directory traversal."""
-    if '..' in path.split(os.sep):
-        print(f"ERROR: path traversal detected: {path}", file=sys.stderr)
-        sys.exit(1)
-    return os.path.realpath(path)
+REGEX_TIMEOUT_SECONDS = 5
 
 def _read_text(path):
     rp = _validate_path(path)
@@ -66,14 +61,30 @@ def cmd_peek(args):
     out = text[offset:offset+length]
     print(out)
 
+def _regex_timeout_handler(signum, frame):
+    raise TimeoutError("regex search exceeded time limit")
+
 def cmd_search(args):
     text = _read_text(args.ctx)
-    pattern = re.compile(args.pattern)
-    matches = []
-    for m in pattern.finditer(text):
-        matches.append({"start": m.start(), "end": m.end(), "match": m.group(0)})
-        if len(matches) >= MAX_SEARCH_RESULTS:
-            break
+    try:
+        pattern = re.compile(args.pattern)
+    except re.error as exc:
+        print(f"ERROR: invalid regex: {exc}", file=sys.stderr)
+        sys.exit(1)
+    old_handler = signal.signal(signal.SIGALRM, _regex_timeout_handler)
+    signal.alarm(REGEX_TIMEOUT_SECONDS)
+    try:
+        matches = []
+        for m in pattern.finditer(text):
+            matches.append({"start": m.start(), "end": m.end(), "match": m.group(0)})
+            if len(matches) >= MAX_SEARCH_RESULTS:
+                break
+    except TimeoutError:
+        print("ERROR: regex search timed out (possible ReDoS pattern)", file=sys.stderr)
+        sys.exit(1)
+    finally:
+        signal.signal(signal.SIGALRM, old_handler)
+        signal.alarm(0)
     print(json.dumps(matches, indent=2))
 
 def cmd_chunk(args):

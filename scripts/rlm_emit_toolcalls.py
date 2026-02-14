@@ -6,6 +6,7 @@ Usage:
   rlm_emit_toolcalls.py --spawn <spawn.jsonl> --subcall-system <path>
 """
 import argparse, json, os, sys
+from rlm_path import validate_path as _validate_path
 
 # --- Safelist enforcement ---
 # Only these action types are accepted in spawn manifests.
@@ -14,16 +15,10 @@ ALLOWED_ACTIONS = frozenset({"sessions_spawn"})
 EMITTED_TOOL = "sessions_spawn"
 MAX_SUBCALLS = 32
 
-def _validate_path(path):
-    """Reject paths containing '..' segments to prevent directory traversal."""
-    if '..' in path.split(os.sep):
-        print(f"ERROR: path traversal detected: {path}", file=sys.stderr)
-        sys.exit(1)
-    return os.path.realpath(path)
-
 def read_spawn(path):
+    rp = _validate_path(path)
     items = []
-    with open(path, 'r', encoding='utf-8') as f:
+    with open(rp, 'r', encoding='utf-8') as f:
         for lineno, line in enumerate(f, 1):
             if line.strip():
                 entry = json.loads(line)
@@ -46,7 +41,8 @@ def read_spawn(path):
     return items
 
 def read_text(path):
-    with open(path, 'r', encoding='utf-8', errors='replace') as f:
+    rp = _validate_path(path)
+    with open(rp, 'r', encoding='utf-8', errors='replace') as f:
         return f.read()
 
 def main():

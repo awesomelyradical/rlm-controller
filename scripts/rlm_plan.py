@@ -3,11 +3,13 @@
 Heuristic: extract keywords from goal, search ctx for them, then propose slices.
 Outputs JSON with proposed slices.
 """
-import argparse, json, re
+import argparse, json, os, re, sys
 from collections import Counter
+from rlm_path import validate_path as _validate_path
 
 def read_text(path):
-    with open(path, 'r', encoding='utf-8', errors='replace') as f:
+    rp = _validate_path(path)
+    with open(rp, 'r', encoding='utf-8', errors='replace') as f:
         return f.read()
 
 def keywords(goal):

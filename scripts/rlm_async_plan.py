@@ -5,7 +5,8 @@ This does not execute subcalls; it outputs a JSON plan with suggested parallel b
 Usage:
   rlm_async_plan.py --plan <plan.json> --batch-size 4
 """
-import argparse, json
+import argparse, json, os, sys
+from rlm_path import validate_path as _validate_path
 
 def main():
     p = argparse.ArgumentParser()
@@ -13,7 +14,8 @@ def main():
     p.add_argument('--batch-size', type=int, default=4)
     args = p.parse_args()
 
-    with open(args.plan, 'r', encoding='utf-8') as f:
+    rp = _validate_path(args.plan)
+    with open(rp, 'r', encoding='utf-8') as f:
         plan = json.load(f)
 
     prompts = plan.get('subcall_prompts', [])

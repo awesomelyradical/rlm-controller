@@ -29,6 +29,7 @@ Only these scripts may be invoked via `exec`. All are bundled in `scripts/`:
 - `rlm_plan.py` — keyword-based slice planning
 - `rlm_auto.py` — auto artifact generation (with secret redaction)
 - `rlm_redact.py` — secret pattern redaction for subcall prompts
+- `rlm_path.py` — shared path-validation helpers (traversal + containment checks)
 - `rlm_async_plan.py` — batch scheduling
 - `rlm_async_spawn.py` — spawn manifest builder
 - `rlm_emit_toolcalls.py` — toolcall JSON formatter

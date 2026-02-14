@@ -6,7 +6,8 @@ that will call sessions_spawn in parallel batches.
 Usage:
   rlm_async_spawn.py --async-plan <async_plan.json> --out <spawn.jsonl>
 """
-import argparse, json, sys
+import argparse, json, os, sys
+from rlm_path import validate_path as _validate_path
 
 # --- Safelist enforcement ---
 ALLOWED_ACTION = "sessions_spawn"
@@ -19,10 +20,12 @@ def main():
     p.add_argument('--out', required=True)
     args = p.parse_args()
 
-    with open(args.async_plan, 'r', encoding='utf-8') as f:
+    rp_in = _validate_path(args.async_plan)
+    rp_out = _validate_path(args.out)
+    with open(rp_in, 'r', encoding='utf-8') as f:
         ap = json.load(f)
 
-    with open(args.out, 'w', encoding='utf-8') as f:
+    with open(rp_out, 'w', encoding='utf-8') as f:
         batch_id = 0
         total_entries = 0
         for batch in ap.get('batches', []):
