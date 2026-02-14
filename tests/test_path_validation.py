@@ -75,9 +75,12 @@ class TestContainmentProtection(unittest.TestCase):
 
     def setUp(self):
         self.tmpdir = tempfile.mkdtemp()
+        self._link_parent = None
 
     def tearDown(self):
         shutil.rmtree(self.tmpdir, ignore_errors=True)
+        if self._link_parent:
+            shutil.rmtree(self._link_parent, ignore_errors=True)
 
     def test_ctx_meta_rejects_symlink_outside_cwd(self):
         """rlm_ctx.py meta should reject a symlink pointing outside the working directory."""
@@ -103,7 +106,8 @@ class TestContainmentProtection(unittest.TestCase):
     def test_relative_path_in_symlinked_cwd_works(self):
         """Scripts should work with relative paths even when CWD is reached via a symlink."""
         # Create a symlink to self.tmpdir
-        link_dir = os.path.join(tempfile.mkdtemp(), 'link_cwd')
+        self._link_parent = tempfile.mkdtemp()
+        link_dir = os.path.join(self._link_parent, 'link_cwd')
         os.symlink(self.tmpdir, link_dir)
 
         # Create a file inside the real tmpdir
@@ -121,8 +125,6 @@ class TestContainmentProtection(unittest.TestCase):
         self.assertEqual(result.returncode, 0, f"Script failed: {result.stderr}")
         meta = json.loads(result.stdout)
         self.assertEqual(meta['chars'], 11)
-
-        shutil.rmtree(os.path.dirname(link_dir), ignore_errors=True)
 
 
 class TestReDoSProtection(unittest.TestCase):

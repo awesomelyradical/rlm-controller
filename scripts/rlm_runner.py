@@ -69,7 +69,7 @@ def main():
     f.add_argument('--final', required=True)
 
     args = p.parse_args()
-    log_path = _validate_path(args.log) if hasattr(args, 'log') else None
+    log_path = _validate_path(args.log)
     if args.cmd == 'init': cmd_init(args, log_path)
     elif args.cmd == 'add': cmd_add(args, log_path)
     elif args.cmd == 'finalize': cmd_finalize(args, log_path)
