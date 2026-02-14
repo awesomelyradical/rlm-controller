@@ -17,8 +17,9 @@ jobs:
 
       - name: Build release zip
         run: |
-          VERSION="${GITHUB_REF_NAME}"
+          VERSION="${GITHUB_REF_NAME//\//-}"
           ARCHIVE="rlm-controller-${VERSION}.zip"
+          ROOT="$(pwd)"
 
           # Create a staging directory with only allowed files
           STAGING=$(mktemp -d)
@@ -42,7 +43,7 @@ jobs:
           done
 
           # Build the zip from the staging directory
-          (cd "${STAGING}" && zip -r "${OLDPWD}/${ARCHIVE}" "rlm-controller-${VERSION}")
+          (cd "${STAGING}" && zip -r "${ROOT}/${ARCHIVE}" "rlm-controller-${VERSION}")
 
           echo "ARCHIVE=${ARCHIVE}" >> "$GITHUB_ENV"
 
