@@ -25,7 +25,11 @@ Executable helper scripts are bundled with this skill (not downloaded at runtime
 - `scripts/rlm_async_plan.py` — batch scheduling
 - `scripts/rlm_async_spawn.py` — spawn manifest
 - `scripts/rlm_emit_toolcalls.py` — toolcall JSON generator
+- `scripts/rlm_batch_runner.py` — assistant-driven executor
+- `scripts/rlm_runner.py` — JSONL orchestrator
 - `scripts/rlm_trace_summary.py` — log summarizer
+- `scripts/rlm_path.py` — shared path-validation helpers
+- `scripts/rlm_redact.py` — secret pattern redaction
 - `docs/policy.md` — policy + safety limits
 - `docs/flows.md` — manual + async flows
 

@@ -51,7 +51,7 @@ Use `sessions_spawn` to execute subcalls in parallel batches. See [docs/flows.md
 
 ```
 rlm-controller/
-├── scripts/           # Core utilities (504 LOC)
+├── scripts/           # Core utilities (~766 LOC)
 │   ├── rlm_ctx.py            # Context store/peek/search/chunk
 │   ├── rlm_plan.py           # Keyword-based slice planner
 │   ├── rlm_auto.py           # Auto artifact generator
@@ -61,12 +61,15 @@ rlm-controller/
 │   ├── rlm_batch_runner.py   # Assistant-driven executor
 │   ├── rlm_runner.py         # JSONL orchestrator
 │   ├── rlm_trace_summary.py  # Log summarizer
+│   ├── rlm_path.py           # Shared path-validation helpers
+│   ├── rlm_redact.py         # Secret pattern redaction
 │   └── cleanup.sh            # Artifact cleanup
 ├── docs/              # Documentation
 │   ├── flows.md              # Manual & async workflows
 │   ├── policy.md             # Limits & decision rules
 │   ├── security.md           # Security foundations
 │   ├── security_checklist.md # Pre/during/post run checks
+│   ├── security_audit_response.md # OpenClaw audit response
 │   └── cleanup_ignore.txt    # Cleanup exclusions
 └── SKILL.md           # OpenClaw skill manifest
 ```
