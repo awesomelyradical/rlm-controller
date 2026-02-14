@@ -82,7 +82,9 @@ class TestSymlinkProtection(unittest.TestCase):
 
     def test_ctx_meta_rejects_symlink(self):
         """rlm_ctx.py meta should reject a symlink pointing to a different location."""
-        target = os.path.join(self.tmpdir, 'real.txt')
+        # Create a second temp dir to ensure symlink crosses directories
+        other_dir = tempfile.mkdtemp()
+        target = os.path.join(other_dir, 'real.txt')
         with open(target, 'w') as f:
             f.write('real content')
         link = os.path.join(self.tmpdir, 'link.txt')
@@ -96,6 +98,9 @@ class TestSymlinkProtection(unittest.TestCase):
         result = subprocess.run(cmd, capture_output=True, text=True)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('symlink', result.stderr)
+
+        import shutil
+        shutil.rmtree(other_dir, ignore_errors=True)
 
 
 class TestReDoSProtection(unittest.TestCase):

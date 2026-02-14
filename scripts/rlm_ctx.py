@@ -94,8 +94,8 @@ def cmd_search(args):
         print("ERROR: regex search timed out (possible ReDoS pattern)", file=sys.stderr)
         sys.exit(1)
     finally:
-        signal.alarm(0)
         signal.signal(signal.SIGALRM, old_handler)
+        signal.alarm(0)
     print(json.dumps(matches, indent=2))
 
 def cmd_chunk(args):
