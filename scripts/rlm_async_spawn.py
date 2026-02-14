@@ -7,23 +7,12 @@ Usage:
   rlm_async_spawn.py --async-plan <async_plan.json> --out <spawn.jsonl>
 """
 import argparse, json, os, sys
+from rlm_path import validate_path as _validate_path
 
 # --- Safelist enforcement ---
 ALLOWED_ACTION = "sessions_spawn"
 MAX_SUBCALLS = 32
 MAX_BATCHES = 8
-
-def _validate_path(path):
-    """Reject directory traversal and symlinks pointing outside the parent directory."""
-    if '..' in path.split(os.sep):
-        print(f"ERROR: path traversal detected: {path}", file=sys.stderr)
-        sys.exit(1)
-    rp = os.path.realpath(path)
-    abs_path = os.path.abspath(path)
-    if rp != abs_path:
-        print(f"ERROR: symlink target outside expected location: {path}", file=sys.stderr)
-        sys.exit(1)
-    return rp
 
 def main():
     p = argparse.ArgumentParser()

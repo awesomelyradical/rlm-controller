@@ -20,9 +20,10 @@ All scripts that produce toolcall output enforce safelists at the code level:
 
 | Script | Enforcement |
 |--------|------------|
-| `rlm_emit_toolcalls.py` | Tool name is the fixed constant `EMITTED_TOOL = "sessions_spawn"` (not derived from input); `ALLOWED_ACTIONS` validates spawn manifest action entries; required fields (`batch`, `prompt_file`) are type-checked; `prompt_file` paths are validated against traversal; `MAX_SUBCALLS` enforced |
+| `rlm_path.py` | Shared path-validation module imported by all scripts; rejects `..` path segments and verifies resolved paths stay within the real working directory (base-dir containment via `commonpath`); ReDoS-safe (no user-supplied regex) |
+| `rlm_emit_toolcalls.py` | Tool name is the fixed constant `EMITTED_TOOL = "sessions_spawn"` (not derived from input); `ALLOWED_ACTIONS` validates spawn manifest action entries; required fields (`batch`, `prompt_file`) are type-checked; `prompt_file` paths are validated against traversal; spawn manifest path validated; `MAX_SUBCALLS` enforced |
 | `rlm_async_spawn.py` | `ALLOWED_ACTION = "sessions_spawn"` — only this action is written to manifests; `MAX_SUBCALLS` and `MAX_BATCHES` enforce hard limits |
-| `rlm_ctx.py` | Path traversal protection rejects `..` segments and resolves paths via `os.path.realpath`; `--ctx-dir` is validated before directory creation; `MAX_PEEK_LENGTH` caps peek output; `MAX_SEARCH_RESULTS` and `MAX_CHUNKS` cap result counts |
+| `rlm_ctx.py` | Path validation via shared `rlm_path.validate_path`; `--ctx-dir` is validated before directory creation; `MAX_PEEK_LENGTH` caps peek output; `MAX_SEARCH_RESULTS` and `MAX_CHUNKS` cap result counts; regex search protected by SIGALRM timeout (5s) against ReDoS |
 | `rlm_auto.py` | `--max-subcalls` (default 32) and `--slice-max` (default 16000) enforce plan-time limits; `--redact` (default: enabled) applies `rlm_redact.redact_secrets` to slice text before writing subcall prompts |
 | `rlm_redact.py` | Regex-based redaction of common secret patterns (PEM blocks, Bearer/Basic tokens, AWS credentials, password/secret/token/api_key assignments, connection-string passwords, hex-encoded secrets) |
 

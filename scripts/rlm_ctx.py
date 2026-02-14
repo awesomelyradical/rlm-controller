@@ -8,23 +8,12 @@ Usage:
   rlm_ctx.py chunk --ctx <file> --size <int> --overlap <int>
 """
 import argparse, hashlib, json, os, re, signal, sys, time
+from rlm_path import validate_path as _validate_path
 
 MAX_SEARCH_RESULTS = 200
 MAX_CHUNKS = 5000
 MAX_PEEK_LENGTH = 16000
 REGEX_TIMEOUT_SECONDS = 5
-
-def _validate_path(path):
-    """Reject directory traversal and symlinks pointing outside the parent directory."""
-    if '..' in path.split(os.sep):
-        print(f"ERROR: path traversal detected: {path}", file=sys.stderr)
-        sys.exit(1)
-    rp = os.path.realpath(path)
-    abs_path = os.path.abspath(path)
-    if rp != abs_path:
-        print(f"ERROR: symlink target outside expected location: {path}", file=sys.stderr)
-        sys.exit(1)
-    return rp
 
 def _read_text(path):
     rp = _validate_path(path)

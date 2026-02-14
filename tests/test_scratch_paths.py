@@ -42,7 +42,7 @@ class TestAutoScratchPaths(unittest.TestCase):
         ]
         if extra_args:
             cmd.extend(extra_args)
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        result = subprocess.run(cmd, capture_output=True, text=True, cwd=self.tmpdir)
         self.assertEqual(result.returncode, 0, f"rlm_auto.py failed: {result.stderr}")
         return json.loads(result.stdout)
 
@@ -122,7 +122,7 @@ class TestAutoScratchPaths(unittest.TestCase):
             '--goal', 'find files with password=hunter2 in config',
             '--outdir', self.outdir,
         ]
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        result = subprocess.run(cmd, capture_output=True, text=True, cwd=self.tmpdir)
         self.assertEqual(result.returncode, 0, f"rlm_auto.py failed: {result.stderr}")
         subcalls_dir = os.path.join(self.outdir, 'subcalls')
         for fname in os.listdir(subcalls_dir):

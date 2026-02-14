@@ -2,6 +2,7 @@
 """Tests for path validation and ReDoS protection across scripts."""
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -20,7 +21,6 @@ class TestPathTraversal(unittest.TestCase):
             f.write('sample content for testing\n')
 
     def tearDown(self):
-        import shutil
         shutil.rmtree(self.tmpdir, ignore_errors=True)
 
     def test_ctx_store_rejects_dot_dot_infile(self):
@@ -31,7 +31,7 @@ class TestPathTraversal(unittest.TestCase):
             'store', '--infile', '../../../etc/passwd',
             '--ctx-dir', self.tmpdir,
         ]
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        result = subprocess.run(cmd, capture_output=True, text=True, cwd=self.tmpdir)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('path traversal', result.stderr)
 
@@ -43,7 +43,7 @@ class TestPathTraversal(unittest.TestCase):
             'store', '--infile', self.ctx_file,
             '--ctx-dir', os.path.join(self.tmpdir, '..', '..', 'etc'),
         ]
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        result = subprocess.run(cmd, capture_output=True, text=True, cwd=self.tmpdir)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('path traversal', result.stderr)
 
@@ -54,7 +54,7 @@ class TestPathTraversal(unittest.TestCase):
             os.path.join(SCRIPTS_DIR, 'rlm_ctx.py'),
             'search', '--ctx', '../../../etc/passwd', '--pattern', 'root',
         ]
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        result = subprocess.run(cmd, capture_output=True, text=True, cwd=self.tmpdir)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('path traversal', result.stderr)
 
@@ -65,24 +65,23 @@ class TestPathTraversal(unittest.TestCase):
             os.path.join(SCRIPTS_DIR, 'rlm_plan.py'),
             '--ctx', '../../../etc/passwd', '--goal', 'test',
         ]
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        result = subprocess.run(cmd, capture_output=True, text=True, cwd=self.tmpdir)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('path traversal', result.stderr)
 
 
-class TestSymlinkProtection(unittest.TestCase):
-    """Verify that symlinks pointing outside expected location are rejected."""
+class TestContainmentProtection(unittest.TestCase):
+    """Verify that paths resolving outside the working directory are rejected."""
 
     def setUp(self):
         self.tmpdir = tempfile.mkdtemp()
 
     def tearDown(self):
-        import shutil
         shutil.rmtree(self.tmpdir, ignore_errors=True)
 
-    def test_ctx_meta_rejects_symlink(self):
-        """rlm_ctx.py meta should reject a symlink pointing to a different location."""
-        # Create a second temp dir to ensure symlink crosses directories
+    def test_ctx_meta_rejects_symlink_outside_cwd(self):
+        """rlm_ctx.py meta should reject a symlink pointing outside the working directory."""
+        # Create a file in a separate directory and a symlink to it
         other_dir = tempfile.mkdtemp()
         target = os.path.join(other_dir, 'real.txt')
         with open(target, 'w') as f:
@@ -95,12 +94,35 @@ class TestSymlinkProtection(unittest.TestCase):
             os.path.join(SCRIPTS_DIR, 'rlm_ctx.py'),
             'meta', '--ctx', link,
         ]
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        result = subprocess.run(cmd, capture_output=True, text=True, cwd=self.tmpdir)
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn('symlink', result.stderr)
+        self.assertIn('outside the working directory', result.stderr)
 
-        import shutil
         shutil.rmtree(other_dir, ignore_errors=True)
+
+    def test_relative_path_in_symlinked_cwd_works(self):
+        """Scripts should work with relative paths even when CWD is reached via a symlink."""
+        # Create a symlink to self.tmpdir
+        link_dir = os.path.join(tempfile.mkdtemp(), 'link_cwd')
+        os.symlink(self.tmpdir, link_dir)
+
+        # Create a file inside the real tmpdir
+        ctx_file = os.path.join(self.tmpdir, 'test.txt')
+        with open(ctx_file, 'w') as f:
+            f.write('hello world')
+
+        # Run script with relative path from the symlinked CWD
+        cmd = [
+            sys.executable,
+            os.path.join(SCRIPTS_DIR, 'rlm_ctx.py'),
+            'meta', '--ctx', 'test.txt',
+        ]
+        result = subprocess.run(cmd, capture_output=True, text=True, cwd=link_dir)
+        self.assertEqual(result.returncode, 0, f"Script failed: {result.stderr}")
+        meta = json.loads(result.stdout)
+        self.assertEqual(meta['chars'], 11)
+
+        shutil.rmtree(os.path.dirname(link_dir), ignore_errors=True)
 
 
 class TestReDoSProtection(unittest.TestCase):
@@ -114,7 +136,6 @@ class TestReDoSProtection(unittest.TestCase):
             f.write('a' * 30)
 
     def tearDown(self):
-        import shutil
         shutil.rmtree(self.tmpdir, ignore_errors=True)
 
     def test_invalid_regex_rejected(self):
@@ -124,7 +145,7 @@ class TestReDoSProtection(unittest.TestCase):
             os.path.join(SCRIPTS_DIR, 'rlm_ctx.py'),
             'search', '--ctx', self.ctx_file, '--pattern', '[invalid',
         ]
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        result = subprocess.run(cmd, capture_output=True, text=True, cwd=self.tmpdir)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('invalid regex', result.stderr)
 
@@ -135,7 +156,7 @@ class TestReDoSProtection(unittest.TestCase):
             os.path.join(SCRIPTS_DIR, 'rlm_ctx.py'),
             'search', '--ctx', self.ctx_file, '--pattern', '(a+)+b',
         ]
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=10, cwd=self.tmpdir)
         # Should exit with error (timeout) rather than hanging
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('timed out', result.stderr)
@@ -150,7 +171,7 @@ class TestReDoSProtection(unittest.TestCase):
             os.path.join(SCRIPTS_DIR, 'rlm_ctx.py'),
             'search', '--ctx', ctx_file, '--pattern', 'hello',
         ]
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=5, cwd=self.tmpdir)
         self.assertEqual(result.returncode, 0)
         matches = json.loads(result.stdout)
         self.assertEqual(len(matches), 1)

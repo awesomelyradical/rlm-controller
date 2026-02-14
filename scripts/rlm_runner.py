@@ -11,27 +11,15 @@ Usage:
   rlm_runner.py finalize --log <path> --final <text>
 """
 import argparse, json, os, sys, time, uuid
-
-def _validate_path(path):
-    """Reject directory traversal and symlinks pointing outside the parent directory."""
-    if '..' in path.split(os.sep):
-        print(f"ERROR: path traversal detected: {path}", file=sys.stderr)
-        sys.exit(1)
-    rp = os.path.realpath(path)
-    abs_path = os.path.abspath(path)
-    if rp != abs_path:
-        print(f"ERROR: symlink target outside expected location: {path}", file=sys.stderr)
-        sys.exit(1)
-    return rp
+from rlm_path import validate_path as _validate_path
 
 def log_write(path, obj):
-    rp = _validate_path(path)
     obj["ts"] = int(time.time())
-    with open(rp, "a", encoding="utf-8") as f:
+    with open(path, "a", encoding="utf-8") as f:
         f.write(json.dumps(obj) + "\n")
 
 
-def cmd_init(args):
+def cmd_init(args, log_path):
     run_id = str(uuid.uuid4())[:8]
     header = {
         "type": "init",
@@ -44,7 +32,7 @@ def cmd_init(args):
             "max_slice_chars": 16000
         }
     }
-    log_write(args.log, header)
+    log_write(log_path, header)
     print(json.dumps(header, indent=2))
     print("\nSuggested next actions:")
     print("- peek/search to find relevant slices")
@@ -52,15 +40,15 @@ def cmd_init(args):
     print("- aggregate results and finalize")
 
 
-def cmd_add(args):
+def cmd_add(args, log_path):
     obj = json.loads(args.action)
     obj["type"] = "action"
-    log_write(args.log, obj)
+    log_write(log_path, obj)
 
 
-def cmd_finalize(args):
+def cmd_finalize(args, log_path):
     obj = {"type": "final", "final": args.final}
-    log_write(args.log, obj)
+    log_write(log_path, obj)
 
 
 def main():
@@ -81,9 +69,10 @@ def main():
     f.add_argument('--final', required=True)
 
     args = p.parse_args()
-    if args.cmd == 'init': cmd_init(args)
-    elif args.cmd == 'add': cmd_add(args)
-    elif args.cmd == 'finalize': cmd_finalize(args)
+    log_path = _validate_path(args.log) if hasattr(args, 'log') else None
+    if args.cmd == 'init': cmd_init(args, log_path)
+    elif args.cmd == 'add': cmd_add(args, log_path)
+    elif args.cmd == 'finalize': cmd_finalize(args, log_path)
 
 if __name__ == '__main__':
     main()

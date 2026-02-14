@@ -6,6 +6,7 @@ Usage:
   rlm_emit_toolcalls.py --spawn <spawn.jsonl> --subcall-system <path>
 """
 import argparse, json, os, sys
+from rlm_path import validate_path as _validate_path
 
 # --- Safelist enforcement ---
 # Only these action types are accepted in spawn manifests.
@@ -14,21 +15,10 @@ ALLOWED_ACTIONS = frozenset({"sessions_spawn"})
 EMITTED_TOOL = "sessions_spawn"
 MAX_SUBCALLS = 32
 
-def _validate_path(path):
-    """Reject directory traversal and symlinks pointing outside the parent directory."""
-    if '..' in path.split(os.sep):
-        print(f"ERROR: path traversal detected: {path}", file=sys.stderr)
-        sys.exit(1)
-    rp = os.path.realpath(path)
-    abs_path = os.path.abspath(path)
-    if rp != abs_path:
-        print(f"ERROR: symlink target outside expected location: {path}", file=sys.stderr)
-        sys.exit(1)
-    return rp
-
 def read_spawn(path):
+    rp = _validate_path(path)
     items = []
-    with open(path, 'r', encoding='utf-8') as f:
+    with open(rp, 'r', encoding='utf-8') as f:
         for lineno, line in enumerate(f, 1):
             if line.strip():
                 entry = json.loads(line)

@@ -6,18 +6,7 @@ Usage:
   rlm_async_plan.py --plan <plan.json> --batch-size 4
 """
 import argparse, json, os, sys
-
-def _validate_path(path):
-    """Reject directory traversal and symlinks pointing outside the parent directory."""
-    if '..' in path.split(os.sep):
-        print(f"ERROR: path traversal detected: {path}", file=sys.stderr)
-        sys.exit(1)
-    rp = os.path.realpath(path)
-    abs_path = os.path.abspath(path)
-    if rp != abs_path:
-        print(f"ERROR: symlink target outside expected location: {path}", file=sys.stderr)
-        sys.exit(1)
-    return rp
+from rlm_path import validate_path as _validate_path
 
 def main():
     p = argparse.ArgumentParser()
