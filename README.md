@@ -120,7 +120,7 @@ This skill integrates with the [OpenClaw](https://github.com/Skywyze/openclaw) a
 
 ## License
 
-Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for details.
+Licensed under the Apache License, Version 2.0. See [LICENCE.md](LICENCE.md) for details.
 
 ## Contributing
 
