@@ -5,8 +5,20 @@ This does not invoke LLMs; it prepares artifacts for OpenClaw root session.
 Usage:
   rlm_auto.py --ctx <path> --goal "..." --outdir <dir>
 """
-import argparse, json, os, subprocess
+import argparse, json, os, subprocess, sys
 from rlm_redact import redact_secrets
+
+def _validate_path(path):
+    """Reject directory traversal and symlinks pointing outside the parent directory."""
+    if '..' in path.split(os.sep):
+        print(f"ERROR: path traversal detected: {path}", file=sys.stderr)
+        sys.exit(1)
+    rp = os.path.realpath(path)
+    abs_path = os.path.abspath(path)
+    if rp != abs_path:
+        print(f"ERROR: symlink target outside expected location: {path}", file=sys.stderr)
+        sys.exit(1)
+    return rp
 
 def run_plan(ctx, goal):
     cmd = ["python3", os.path.join(os.path.dirname(__file__), "rlm_plan.py"),
@@ -15,7 +27,8 @@ def run_plan(ctx, goal):
     return json.loads(out)
 
 def read_text(path):
-    with open(path, 'r', encoding='utf-8', errors='replace') as f:
+    rp = _validate_path(path)
+    with open(rp, 'r', encoding='utf-8', errors='replace') as f:
         return f.read()
 
 def main():
@@ -31,6 +44,7 @@ def main():
                    help='Disable secret redaction in subcall prompts')
     args = p.parse_args()
 
+    _validate_path(args.outdir)
     os.makedirs(args.outdir, exist_ok=True)
     plan = run_plan(args.ctx, args.goal)
     slices = plan.get("slices", [])

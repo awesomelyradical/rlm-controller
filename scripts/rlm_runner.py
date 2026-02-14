@@ -10,11 +10,24 @@ Usage:
   rlm_runner.py add  --log <path> --action <json>
   rlm_runner.py finalize --log <path> --final <text>
 """
-import argparse, json, time, uuid
+import argparse, json, os, sys, time, uuid
+
+def _validate_path(path):
+    """Reject directory traversal and symlinks pointing outside the parent directory."""
+    if '..' in path.split(os.sep):
+        print(f"ERROR: path traversal detected: {path}", file=sys.stderr)
+        sys.exit(1)
+    rp = os.path.realpath(path)
+    abs_path = os.path.abspath(path)
+    if rp != abs_path:
+        print(f"ERROR: symlink target outside expected location: {path}", file=sys.stderr)
+        sys.exit(1)
+    return rp
 
 def log_write(path, obj):
+    rp = _validate_path(path)
     obj["ts"] = int(time.time())
-    with open(path, "a", encoding="utf-8") as f:
+    with open(rp, "a", encoding="utf-8") as f:
         f.write(json.dumps(obj) + "\n")
 
 

@@ -3,11 +3,24 @@
 Heuristic: extract keywords from goal, search ctx for them, then propose slices.
 Outputs JSON with proposed slices.
 """
-import argparse, json, re
+import argparse, json, os, re, sys
 from collections import Counter
 
+def _validate_path(path):
+    """Reject directory traversal and symlinks pointing outside the parent directory."""
+    if '..' in path.split(os.sep):
+        print(f"ERROR: path traversal detected: {path}", file=sys.stderr)
+        sys.exit(1)
+    rp = os.path.realpath(path)
+    abs_path = os.path.abspath(path)
+    if rp != abs_path:
+        print(f"ERROR: symlink target outside expected location: {path}", file=sys.stderr)
+        sys.exit(1)
+    return rp
+
 def read_text(path):
-    with open(path, 'r', encoding='utf-8', errors='replace') as f:
+    rp = _validate_path(path)
+    with open(rp, 'r', encoding='utf-8', errors='replace') as f:
         return f.read()
 
 def keywords(goal):

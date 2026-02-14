@@ -15,11 +15,16 @@ EMITTED_TOOL = "sessions_spawn"
 MAX_SUBCALLS = 32
 
 def _validate_path(path):
-    """Reject paths containing '..' segments to prevent directory traversal."""
+    """Reject directory traversal and symlinks pointing outside the parent directory."""
     if '..' in path.split(os.sep):
         print(f"ERROR: path traversal detected: {path}", file=sys.stderr)
         sys.exit(1)
-    return os.path.realpath(path)
+    rp = os.path.realpath(path)
+    abs_path = os.path.abspath(path)
+    if rp != abs_path:
+        print(f"ERROR: symlink target outside expected location: {path}", file=sys.stderr)
+        sys.exit(1)
+    return rp
 
 def read_spawn(path):
     items = []
@@ -46,7 +51,8 @@ def read_spawn(path):
     return items
 
 def read_text(path):
-    with open(path, 'r', encoding='utf-8', errors='replace') as f:
+    rp = _validate_path(path)
+    with open(rp, 'r', encoding='utf-8', errors='replace') as f:
         return f.read()
 
 def main():
