@@ -13,7 +13,11 @@ def run_plan(ctx, goal):
     cmd = ["python3", os.path.join(os.path.dirname(__file__), "rlm_plan.py"),
            "--ctx", ctx, "--goal", goal]
     out = subprocess.check_output(cmd, text=True)
-    return json.loads(out)
+    try:
+        return json.loads(out)
+    except json.JSONDecodeError as e:
+        print(f"ERROR: rlm_plan.py produced invalid JSON: {e}", file=sys.stderr)
+        sys.exit(1)
 
 def read_text(path):
     rp = _validate_path(path)

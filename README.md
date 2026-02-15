@@ -109,7 +109,7 @@ Default policies can be customized in [docs/policy.md](docs/policy.md):
 
 ## OpenClaw Integration
 
-This skill integrates with the [OpenClaw](https://github.com/Skywyze/openclaw) agent framework:
+This skill integrates with the [OpenClaw](https://github.com/openclaw/openclaw) agent framework:
 - Uses `sessions_spawn` for parallel subcalls
 - Respects sub-agent constraints (no nested spawning)
 - Compatible with OpenClaw's tool safety model
